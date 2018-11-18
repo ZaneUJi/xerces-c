@@ -207,7 +207,7 @@ add_xerces_test(MemHandlerTest   COMMAND MemHandlerTest EXPECT_FAIL)
 add_xerces_test(MemHandlerTest1  COMMAND MemHandlerTest -v=always -n -r=2 personal.xml)
 add_xerces_test(MemHandlerTest2  COMMAND MemHandlerTest -v=always -n -r=2 -s -f personal-schema.xml)
 
-if (NOT XERCES_USE_NETACCESSOR STREQUAL "disabled")
+if (XERCES_USE_NETACCESSOR)
   add_xerces_test(NetAccessorTest  COMMAND NetAccessorTest EXPECT_FAIL)
   add_xerces_test(NetAccessorTest1 COMMAND NetAccessorTest "-H=User-Agent: xerces-c" "http://www.w3.org/2001/datatypes.dtd")
 endif()
