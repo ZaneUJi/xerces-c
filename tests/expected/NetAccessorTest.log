@@ -1,0 +1,10 @@
+Usage: NetAccessorTest [options] url
+
+This test reads data from the given url and writes the result
+to standard output.
+
+A variety of buffer sizes is are used during the test.
+
+Options:
+	   -H=xxx		 - Add an HTTP header.
+

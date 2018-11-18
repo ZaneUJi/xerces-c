@@ -98,6 +98,7 @@ private :
 	
     CURLM*				fMulti;
     CURL*				fEasy;
+    struct curl_slist*  fHeadersList;
     
     MemoryManager*      fMemoryManager;
     

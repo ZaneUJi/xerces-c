@@ -207,6 +207,11 @@ add_xerces_test(MemHandlerTest   COMMAND MemHandlerTest EXPECT_FAIL)
 add_xerces_test(MemHandlerTest1  COMMAND MemHandlerTest -v=always -n -r=2 personal.xml)
 add_xerces_test(MemHandlerTest2  COMMAND MemHandlerTest -v=always -n -r=2 -s -f personal-schema.xml)
 
+if (NOT XERCES_USE_NETACCESSOR STREQUAL "disabled")
+  add_xerces_test(NetAccessorTest  COMMAND NetAccessorTest EXPECT_FAIL)
+  add_xerces_test(NetAccessorTest1 COMMAND NetAccessorTest "-H=User-Agent: xerces-c" "http://www.w3.org/2001/datatypes.dtd")
+endif()
+
 add_xerces_test(DOMTypeInfoTest WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src/DOM/TypeInfo" COMMAND DOMTypeInfoTest)
 
 if(XERCES_XMLCH_T STREQUAL "char16_t")

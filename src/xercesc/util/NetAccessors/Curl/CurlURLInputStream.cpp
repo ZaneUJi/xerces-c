@@ -56,6 +56,7 @@ XERCES_CPP_NAMESPACE_BEGIN
 CurlURLInputStream::CurlURLInputStream(const XMLURL& urlSource, const XMLNetHTTPInfo* httpInfo/*=0*/)
       : fMulti(0)
       , fEasy(0)
+      , fHeadersList(0)
       , fMemoryManager(urlSource.getMemoryManager())
       , fURLSource(urlSource)
       , fTotalBytesRead(0)
@@ -117,8 +118,6 @@ CurlURLInputStream::CurlURLInputStream(const XMLURL& urlSource, const XMLNetHTTP
 
         // Add custom headers
         if(httpInfo->fHeaders) {
-            struct curl_slist *headersList = 0;
-
             const char *headersBuf = httpInfo->fHeaders;
             const char *headersBufEnd = httpInfo->fHeaders + httpInfo->fHeadersLen;
 
@@ -133,7 +132,7 @@ CurlURLInputStream::CurlURLInputStream(const XMLURL& urlSource, const XMLNetHTTP
                     memcpy(header.get(), headerStart, length);
                     header.get()[length] = 0;
 
-                    headersList = curl_slist_append(headersList, header.get());
+                    fHeadersList = curl_slist_append(fHeadersList, header.get());
 
                     headersBuf += 2;
                     headerStart = headersBuf;
@@ -141,8 +140,7 @@ CurlURLInputStream::CurlURLInputStream(const XMLURL& urlSource, const XMLNetHTTP
                 }
                 ++headersBuf;
             }
-            curl_easy_setopt(fEasy, CURLOPT_HTTPHEADER, headersList);
-            curl_slist_free_all(headersList);
+            curl_easy_setopt(fEasy, CURLOPT_HTTPHEADER, fHeadersList);
         }
 
         // Set up the payload
@@ -184,6 +182,9 @@ CurlURLInputStream::~CurlURLInputStream()
 
 	// Cleanup the multi handle
 	curl_multi_cleanup(fMulti);
+
+	// Cleanup the headers list
+	curl_slist_free_all(fHeadersList);
 
     if(fContentType) fMemoryManager->deallocate(fContentType);
 }

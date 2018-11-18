@@ -29,12 +29,16 @@
 #include    <xercesc/util/XMLURL.hpp>
 #include    <xercesc/util/XMLNetAccessor.hpp>
 #include    <xercesc/util/BinInputStream.hpp>
+#include    <xercesc/util/ValueArrayOf.hpp>
+
+#include    <string.h>
 
 #if defined(XERCES_NEW_IOSTREAMS)
 #include	<iostream>
 #else
 #include	<iostream.h>
 #endif
+
 
 XERCES_CPP_NAMESPACE_USE
 
@@ -85,6 +89,19 @@ exercise(BinInputStream& stream)
 	} while (bytesRead > 0);
 }
 
+static void usage()
+{
+	XERCES_STD_QUALIFIER cerr << "Usage: NetAccessorTest [options] url\n"
+			"\n"
+			"This test reads data from the given url and writes the result\n"
+			"to standard output.\n"
+			"\n"
+			"A variety of buffer sizes is are used during the test.\n"
+			"\n"
+			"Options:\n"
+			"	   -H=xxx		 - Add an HTTP header.\n"
+			"\n";
+}
 
 // ---------------------------------------------------------------------------
 //  Program entry point
@@ -95,7 +112,18 @@ main(int argc, char** argv)
     // Init the XML platform
     try
     {
-        XMLPlatformUtils::Initialize();
+		static class Initializer
+		{
+		public:
+			Initializer ()
+			{
+				XMLPlatformUtils::Initialize();
+			}
+			~Initializer()
+			{
+				XMLPlatformUtils::Terminate();
+			}
+		} dummy;
     }
 
     catch(const XMLException& toCatch)
@@ -105,22 +133,52 @@ main(int argc, char** argv)
         return 1;
     }
     
-    // Look for our one and only parameter
-    if (argc != 2)
+    // Check command line and extract arguments.
+    if (argc < 2)
     {
-    	XERCES_STD_QUALIFIER cerr << "Usage: NetAccessorTest url\n"
-    			"\n"
-    			"This test reads data from the given url and writes the result\n"
-    			"to standard output.\n"
-    			"\n"
-    			"A variety of buffer sizes is are used during the test.\n"
-    			"\n"
-    			;
+    	usage();
     	exit(1);
     }
+
+	ValueArrayOf<char> headers(1);
+	headers[0] = '\0';
     
+    int parmInd;
+    for (parmInd = 1; parmInd < argc; parmInd++)
+    {
+        // Break out on first parm not starting with a dash
+        if (argv[parmInd][0] != '-')
+            break;
+
+        // Watch for special case help request
+        if (!XMLString::compareString(argv[parmInd], "-?"))
+        {
+            usage();
+            return 2;
+        }
+        else if (!XMLString::compareNString(argv[parmInd], "-H=", 3))
+        {
+            const char* const parm = &argv[parmInd][3];
+			XMLSize_t length = headers.length();
+			XMLSize_t parmLen = XMLString::stringLen(parm);
+			headers.resize(length + parmLen + 2);
+			memcpy(headers.rawData() + length - 1, parm, parmLen);
+			memcpy(headers.rawData() + headers.length() - 3, "\r\n", 3);
+        }
+		else
+		{
+			break;
+		}
+    }
+
+    if (parmInd + 1 != argc)
+    {
+        usage();
+        return 1;
+    }
+
     // Get the URL
-    char* url = argv[1];
+    char* url = argv[parmInd];
     
     // Do the test
     try
@@ -135,8 +193,12 @@ main(int argc, char** argv)
 			exit(2);
 		}
 		
+		XMLNetHTTPInfo httpInfo;
+		httpInfo.fHeaders = headers.rawData();
+		httpInfo.fHeadersLen = headers.length() - 1;
+
 		// Build a binary input stream
-		BinInputStream* is = na->makeNew(xmlURL);
+		BinInputStream* is = na->makeNew(xmlURL, &httpInfo);
 		if (is == 0)
 		{
 			XERCES_STD_QUALIFIER cerr <<  "No binary input stream created. Aborting.\n";
@@ -156,9 +218,6 @@ main(int argc, char** argv)
              << toCatch.getMessage()
              << XERCES_STD_QUALIFIER endl;
     }
-
-    // And call the termination method
-    XMLPlatformUtils::Terminate();
 
     return 0;
 }

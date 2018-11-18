@@ -182,3 +182,9 @@ XFAIL_TESTS =				scripts/XSerializerTest \
 					scripts/InitTermTest \
 					scripts/ThreadTest \
 					scripts/MemHandlerTest
+
+if XERCES_USE_NETACCESSOR
+TESTS +=				scripts/NetAccessorTest \
+					scripts/NetAccessorTest1
+XFAIL_TESTS += scripts/NetAccessorTest
+endif

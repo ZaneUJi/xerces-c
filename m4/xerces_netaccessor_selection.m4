@@ -196,6 +196,7 @@ AC_DEFUN([XERCES_NETACCESSOR_SELECTION],
 	AM_CONDITIONAL([XERCES_USE_NETACCESSOR_CFURL],		[test x"$netaccessor" = xcfurl])
 	AM_CONDITIONAL([XERCES_USE_NETACCESSOR_WINSOCK],	[test x"$netaccessor" = xwinsock])
 	AM_CONDITIONAL([XERCES_USE_NETACCESSOR_SOCKET],		[test x"$netaccessor" = xsocket])
+	AM_CONDITIONAL([XERCES_USE_NETACCESSOR],		[test x"$netaccessor" != xdisabled])
 
 	]
 )
